@@ -406,22 +406,22 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
             imageEncoding = sensor_msgs::image_encodings::MONO8;
           }
         }
-
-        // Image Conversion for use with Yolo
-        if (config.color_processing_algorithm == "DEFAULT") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DEFAULT);
-        else if (config.color_processing_algorithm == "HQ_LINEAR") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
-        else if (config.color_processing_algorithm == "DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
-        else if (config.color_processing_algorithm == "WEIGHTED_DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
-        else throw std::runtime_error(
-          "[SpinnakerCamera::grabImage] Failed to recognize Color Processing Algorithm, candidates are: DEFAULT, HQ_LINEAR, DIRECTIONAL_FILTER, WEIGHTED_DIRECTIONAL_FILTER");
-        
+        if(imageEncoding == sensor_msgs::image_encodings::BGR8) {
+          // Image Conversion for use with Yolo. This is currently only tested for BGR8 image encoding.
+          if (config.color_processing_algorithm == "DEFAULT") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DEFAULT);
+          else if (config.color_processing_algorithm == "HQ_LINEAR") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
+          else if (config.color_processing_algorithm == "DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+          else if (config.color_processing_algorithm == "WEIGHTED_DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
+          else throw std::runtime_error(
+            "[SpinnakerCamera::grabImage] Failed to recognize Color Processing Algorithm, candidates are: DEFAULT, HQ_LINEAR, DIRECTIONAL_FILTER, WEIGHTED_DIRECTIONAL_FILTER");
+        }
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
         int stride = image_ptr->GetStride();
 
         // ROS_INFO_ONCE("\033[93m wxh: (%d, %d), stride: %d \n", width, height,
         // stride);
-        fillImage(*image, sensor_msgs::image_encodings::BGR8, height, width, stride,
+        fillImage(*image, imageEncoding, height, width, stride,
                   image_ptr->GetData());
         image->header.frame_id = frame_id;
 
