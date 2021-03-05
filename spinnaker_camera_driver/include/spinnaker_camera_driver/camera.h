@@ -77,6 +77,33 @@ class Camera {
   int getHeightMax();
   int getWidthMax();
 
+  /*!
+  * \brief Will configure the packet size of the GigECamera with the given GUID
+  * to a given value.
+  *
+  * Note that this is expected only to work for GigE cameras, and only if the
+  * camera
+  * is not connected.
+  *
+  * \param guid the camera to autoconfigure
+  * \param packet_size The packet size value to use.
+  */
+  void setupGigEPacketSize(const unsigned int packet_size);
+
+
+    /*!
+    * \brief Will configure the packet delay of the GigECamera with the given GUID
+    * to a given value.
+    *
+    * Note that this is expected only to work for GigE cameras, and only if the
+    * camera
+    * is not connected.
+    *
+    * \param guid the camera to autoconfigure
+    * \param packet_delay The packet delay value to use.
+    */
+    void setupGigEPacketDelay(const unsigned int packet_delay);
+
   Spinnaker::GenApi::CNodePtr readProperty(
       const Spinnaker::GenICam::gcstring property_name);
 
@@ -99,17 +126,6 @@ class Camera {
   virtual void setFrameRate(const float frame_rate);
   virtual void setImageControlFormats(
       const spinnaker_camera_driver::SpinnakerConfig& config);
-  /*!
-  * \brief Set parameters relative to GigE cameras.
-  *
-  * \param auto_packet_size Flag stating if packet size should be automatically
-  * determined or not.
-  * \param packet_size The packet size value to use if auto_packet_size is
-  * false.
-  */
-  // TODO(mhosmar): Implement later
-  // void setGigEParameters(bool auto_packet_size, unsigned int packet_size,
-  // unsigned int packet_delay);
 
   /*!
   * \brief Will autoconfigure the packet size of the GigECamera with the given
@@ -123,36 +139,6 @@ class Camera {
   */
   // TODO(mhosmar): Implement later
   // void setupGigEPacketSize(FlyCapture2::PGRGuid & guid);
-
-  /*!
-  * \brief Will configure the packet size of the GigECamera with the given GUID
-  * to a given value.
-  *
-  * Note that this is expected only to work for GigE cameras, and only if the
-  * camera
-  * is not connected.
-  *
-  * \param guid the camera to autoconfigure
-  * \param packet_size The packet size value to use.
-  */
-  // TODO(mhosmar): Implement later
-  // void setupGigEPacketSize(FlyCapture2::PGRGuid & guid, unsigned int
-  // packet_size);
-
-  /*!
-  * \brief Will configure the packet delay of the GigECamera with the given GUID
-  * to a given value.
-  *
-  * Note that this is expected only to work for GigE cameras, and only if the
-  * camera
-  * is not connected.
-  *
-  * \param guid the camera to autoconfigure
-  * \param packet_delay The packet delay value to use.
-  */
-  // TODO(mhosmar): Implement later
-  // void setupGigEPacketDelay(FlyCapture2::PGRGuid & guid, unsigned int
-  // packet_delay);
 
   /*!
   * \brief Gets the current frame rate.

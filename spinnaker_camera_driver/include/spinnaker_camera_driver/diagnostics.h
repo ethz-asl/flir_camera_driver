@@ -138,7 +138,7 @@ class DiagnosticsManager {
   // Information about the device model, firmware, etc
   // TODO(mlowe): Allow these to be configured
   // clang-format off
-  const std::vector<std::string> manufacturer_params_
+  std::vector<std::string> manufacturer_params_
   {
     "DeviceVendorName", "DeviceModelName", "SensorDescription", "DeviceFirmwareVersion"
   };

@@ -307,13 +307,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     spinnaker_.setDesiredCamera((uint32_t)serial);
 
     // Get GigE camera parameters:
-    pnh.param<int>("packet_size", packet_size_, 1400);
+    pnh.param<int>("packet_size", packet_size_, 1500);
     pnh.param<bool>("auto_packet_size", auto_packet_size_, true);
-    pnh.param<int>("packet_delay", packet_delay_, 4000);
+    pnh.param<int>("packet_delay", packet_delay_, 0);
 
-    // TODO(mhosmar):  Set GigE parameters:
-    // spinnaker_.setGigEParameters(auto_packet_size_, packet_size_,
-    // packet_delay_);
+    spinnaker_.setGigEParameters(auto_packet_size_, packet_size_,
+    packet_delay_);
 
     // Get the location of our camera config yaml
     std::string camera_info_url;
@@ -463,7 +462,11 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                                                         // to stop this
                                                         // thread.
     {
-      diag_man->processDiagnostics(&spinnaker_);
+      try {
+        diag_man->processDiagnostics(&spinnaker_);
+      } catch (GetParameterException& e) {
+        NODELET_WARN("%s", e.what());
+      }
     }
   }
 
@@ -475,8 +478,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   * them.
   */
   void devicePoll() {
-    ROS_INFO_ONCE("devicePoll");
-
     enum State { NONE, ERROR, STOPPED, DISCONNECTED, CONNECTED, STARTED };
 
     State state = DISCONNECTED;
@@ -546,16 +547,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             // Set last configuration, forcing the reconfigure level to stop
             spinnaker_.setNewConfiguration(
                 config_, SpinnakerCamera::LEVEL_RECONFIGURE_STOP);
-
-            // Set the timeout for grabbing images.
-            try {
-              double timeout;
-              getMTPrivateNodeHandle().param("timeout", timeout, 1.0);
-              NODELET_DEBUG_ONCE("Setting timeout to: %f.", timeout);
-              spinnaker_.setTimeout(timeout);
-            } catch (const std::runtime_error& e) {
-              NODELET_ERROR("%s", e.what());
-            }
 
             // Subscribe to gain and white balance changes
             {
@@ -736,6 +727,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
               img_numbered_pub_.publish(image);
             }
           } catch (CameraTimeoutException& e) {
+            NODELET_WARN("%s", e.what());
+          }
+
+          catch (CameraImageIncompleteException& e) {
             NODELET_WARN("%s", e.what());
           }
 

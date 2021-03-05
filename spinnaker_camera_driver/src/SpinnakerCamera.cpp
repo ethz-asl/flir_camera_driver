@@ -55,6 +55,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "spinnaker_camera_driver/SpinnakerCamera.h"
+#include "spinnaker_camera_driver/camera_exceptions.h"
 
 #include <iostream>
 #include <sstream>
@@ -205,7 +206,6 @@ void SpinnakerCamera::connect() {
                   "Super-Speed. Check Cables! ");
           }
         }
-        // TODO(mhosmar): - check if interface is GigE and connect to GigE cam
       }
     } catch (const Spinnaker::Exception& e) {
       throw std::runtime_error(
@@ -232,10 +232,27 @@ void SpinnakerCamera::connect() {
         camera_.reset(new Camera(node_map_));
       else if (model_name_str.find("Chameleon3") != std::string::npos)
         camera_.reset(new Cm3(node_map_));
+      else if (model_name_str.find("Blackfly") != std::string::npos)
+        camera_.reset(new BFly(node_map_));
       else {
         camera_.reset(new Camera(node_map_));
         ROS_WARN(
             "SpinnakerCamera::connect: Could not detect camera model name.");
+      }
+
+      // Configure GigE interfaces.
+      Spinnaker::GenApi::INodeMap& genTLNodeMap = pCam_->GetTLDeviceNodeMap();
+      auto device_type_ptr = static_cast<Spinnaker::GenApi::CEnumerationPtr>(
+                                            genTLNodeMap.GetNode("DeviceType"));
+      if (!IsAvailable(device_type_ptr) || !IsReadable(device_type_ptr)) {
+        ROS_ERROR("[SpinnakerCamera::connect] Unable to read DeviceType");
+      } else if (device_type_ptr->GetCurrentEntry() ==
+          device_type_ptr->GetEntryByName("GEV")) {
+      if (auto_packet_size_) {
+        packet_size_ = pCam_->DiscoverMaxPacketSize();
+      }
+        camera_->setupGigEPacketSize(packet_size_);
+        camera_->setupGigEPacketDelay(packet_delay_);
       }
 
       // Configure chunk data - Enable Metadata
@@ -326,16 +343,16 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
     try {
       // Since it takes time to initialize (i.e., enabling trigger) arduino
       // sync. Otherwise it will produce timeout error of this driver. Therefore
-      // give more time for grabbing an image by increasing timeout.
-      timeout_ = 60000;  // 60secs
-      Spinnaker::ImagePtr image_ptr = pCam_->GetNextImage(timeout_);
+      // default timeout infinite.
+      Spinnaker::ImagePtr image_ptr = pCam_->GetNextImage();
       //  std::string format(image_ptr->GetPixelFormatName());
       //  std::printf("\033[100m format: %s \n", format.c_str());
 
       if (image_ptr->IsIncomplete()) {
-        throw std::runtime_error(
-            "[SpinnakerCamera::grabImage] Image received from camera " +
-            std::to_string(serial_) + " is incomplete.");
+        throw CameraImageIncompleteException(
+          "[SpinnakerCamera::grabImage] Image received from camera " +
+          std::to_string(serial_) + " is incomplete: " +
+          Spinnaker::Image::GetImageStatusDescription(image_ptr->GetImageStatus()));
       } else {
         // Set Image Time Stamp
         image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
@@ -433,10 +450,15 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
   }
 }  // end grabImage
 
-void SpinnakerCamera::setTimeout(const double& timeout) {
-  timeout_ = static_cast<uint64_t>(std::round(timeout * 1000));
-}
 void SpinnakerCamera::setDesiredCamera(const uint32_t& id) { serial_ = id; }
+
+void SpinnakerCamera::setGigEParameters(bool auto_packet_size,
+                                        unsigned int packet_size,
+                                        unsigned int packet_delay) {
+  auto_packet_size_ = auto_packet_size;
+  packet_size_ = packet_size;
+  packet_delay_ = packet_delay;
+}
 
 void SpinnakerCamera::ConfigureChunkData(
     const Spinnaker::GenApi::INodeMap& nodeMap) {

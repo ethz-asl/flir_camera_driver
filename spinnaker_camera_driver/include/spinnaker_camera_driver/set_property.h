@@ -259,7 +259,13 @@ inline bool setMaxInt(Spinnaker::GenApi::INodeMap* node_map,
 
   if (Spinnaker::GenApi::IsAvailable(intPtr)) {
     if (Spinnaker::GenApi::IsWritable(intPtr)) {
-      intPtr->SetValue(intPtr->GetMax());
+      // The difference between Value and Min must be dividable without rest by Inc
+      auto max = intPtr->GetMax();
+      auto min = intPtr->GetMin();
+      auto inc = intPtr->GetInc();
+      auto diff = max - min;
+      auto max_inc = diff / inc;
+      intPtr->SetValue(max_inc * inc + min);
       ROS_INFO_STREAM("[SpinnakerCamera]: ("
                       << static_cast<Spinnaker::GenApi::CStringPtr>(
                              node_map->GetNode("DeviceID"))
