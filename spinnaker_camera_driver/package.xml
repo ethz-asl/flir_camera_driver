@@ -48,6 +48,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
   <depend>image_transport</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>diagnostic_updater</depend>
+  <depend>image_numbered_msgs</depend>
   <depend>opencv3</depend>
 
   <!-- Dependencies of libSpinnaker -->
