@@ -6,9 +6,15 @@ Tip when installing spinnaker: Only install the actual library and not libspinvi
 To do so, modify the install script (install_spinnaker.sh) to not include any of the spinvideo/spinview packages (on line 38 and following)
 
 ## How to install
-https://eu.ptgrey.com/support/downloads/11048/  
+* Get the Spinnaker SDK from https://www.flir.com/products/spinnaker-sdk/.<br />
+Direct link to most recent SpinnakerSDK for Linux: https://flir.app.boxcn.net/v/SpinnakerSDK/folder/69083919457.
+
+* Follow the instructions in the provided REAMDE to install the Spinnaker SDK on your system.
+
+* The Spinnaker SDK depends on libunwind8:
 ```sudo apt install libunwind8-dev```
-* package depends on [mavros_msgs](git@github.com:ethz-asl/mavros.git)
+* The spinnaker_camera_driver package (part of this repository) depends on [image_numbered_msgs](https://github.com/ethz-asl/image_numbered_msgs.git)
+
 ### Increasing USB memory buffer
 From [Pointgrey](https://www.ptgrey.com/tan/10685#ConfiguringUSBFS)
 
