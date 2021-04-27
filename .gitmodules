@@ -1,3 +1,0 @@
-[submodule "image_numbered_msgs"]
-	path = image_numbered_msgs
-	url = https://github.com/ethz-asl/image_numbered_msgs.git
